@@ -19,11 +19,15 @@ class Wglance():
 	# Just to make sure there is only one client
 	__instance = None
 
+
 	def __init__(self, u, mode):
+	
 		if Wglance.__instance:
 			raise Exception("Just one client per session allowed!")
+		
 		Wglance.__instance = self
 		self.user = u
+		
 		if(mode == "password"):
 			loader = loading.get_plugin_loader('password')
 			auth = loader.load_from_options(auth_url=u.endpoint, username=u.name, \
@@ -39,17 +43,23 @@ class Wglance():
 	def __str__(self):
 		print(self.glance)
 
+
 	def saysomething(self):
 		print "I exist"
-	
+
+
 	def exists(self, image_id):
+		
 		try:
 			self.glance.images.get(image_id)
 			return True
+		
 		except Exception, e:
+		
 			if(re.search('^404*', str(e))):
 				logging.error("[404] IMAGE %s NOT FOUND" % image_id)
 				return False
+			
 			return False
 
 
@@ -62,6 +72,7 @@ class Wglance():
 		
 		print(table)
 
+
 	def toggle_visibility(self, image_id, visibility):
 		
 		if visibility is "private":
@@ -71,7 +82,8 @@ class Wglance():
 			self.glance.images.update(image_id, visibility='public')
 		
 		logging.info("Visibility for image %s is now %s" % (image_id, visibility))
-	
+
+
 	# Add a share for the image provided;
 	def add_share(self, image_id, tenant_id):
 		'''
@@ -81,16 +93,19 @@ class Wglance():
 		try:
 			logging.info("Adding member %s for image %s " % (tenant_id, image_id))
 			self.glance.image_members.create(image_id, tenant_id)
+		
 		except Exception as e:
+			
 			if(re.search('^409*', str(e))):
 				logging.error("[409] THIS MEMBERSHIP WAS ALREADY DEFINED")
 			elif(re.search('^403*', str(self.error))):
 				logging.error("[403] FORBIDDEN")
 
-	# TODO: Delete the image
+
 	def delete_image(self, image_id):
-		pass
-	
+		self.glance.images.delete(image_id)
+
+
 	def remove_share(self, image_id, tenant_id):
 		'''
 		>> image_id: the image provided
@@ -104,9 +119,10 @@ class Wglance():
 		except:
 			raise Exception("No idea what could go wrong..")
 
-	# It cannot work for authentication reasons...hope for new better API
+
 	def update_membership_status(self, image_id, tenant_id):
 		self.glance.image_members.update(image_id, tenant_id)
+
 
 	def image_list(self):
 		table = PrettyTable(['ID', 'VISIBILITY', 'DEPRECATED'])
@@ -148,7 +164,8 @@ class Wglance():
 			img = json.loads(json.dumps(image))
 			img_list.append(img.get('id'))
 		return img_list
-	
+
+
 	def is_visible(self, image_id):
 		for k, v in json.loads(json.dumps(self.glance.images.get(image_id))).items():
 			if(k == "visibility" and v is "public"):
@@ -173,7 +190,6 @@ class Wglance():
 		return False
 	
 	
-
 	def is_shared(self, image_id, tenant_id):
 		if len(self.member_list(image_id)) > 0:
 			return True

@@ -131,6 +131,7 @@ def autoglancing(**kwargs):
 
 
 def aging_image(image, **kwargs):
+	
 	'''
 	The aging algorithm is design to work on deprecation defined model.
 	For each image it follows these steps:
@@ -139,7 +140,7 @@ def aging_image(image, **kwargs):
 	3. For each active node that use the image, add a member share
 	4. Print the resulting member share
 	'''
-
+	
 	gclient = kwargs['gclient']
 	logging.info("STARTING AGING ALGO FOR IMAGE %s " % image)
 
@@ -149,12 +150,12 @@ def aging_image(image, **kwargs):
 			raise ImageDoesNotExistException
 		else:
 			logging.info("IMAGE %s EXISTS " % image)
-	
+
 	except ImageDoesNotExistException:
 		logging.error("IMAGE DOESN'T EXIST")
-		#TODO: produce a image.retry file in which we can append the failed image
+		yield_retry(image)
 		return -1
-	
+
 	logging.info("DEPRECATING IMAGE %s " % image)
 	gclient.toggle_deprecated(image, True)
 	logging.debug(gclient.image_show(image))
@@ -167,11 +168,33 @@ def aging_image(image, **kwargs):
 	mark_as_shared(image, **kwargs)
 	gclient.show_member_list(image)
 
+
 # Utility
 def listing_images(gclient):
-	# gclient.image_list()
 	print(gclient.get_all_images())
 
+
+def yield_retry(msg):
+
+	try:
+		with open("hosts.retry", 'a') as f:
+			f.write(msg)
+	except Exception, e:
+		logging.error(str(e))
+
+
+def load_images_from_file(fpath):
+
+	images = []
+
+	try:
+		with open(fpath, 'r') as f:
+			for image in f:
+				images.append(image.strip())
+			return images
+	except IOError, e:
+		logging.error(str(e))
+		exit(-1)
 
 
 def cli():
@@ -180,18 +203,19 @@ def cli():
 	print("GLANCE AGING PLUGIN")
 	print("------------------------------\n")
 
-	parser = optparse.OptionParser('\nsource keystonerc* \nusage %prog --image [image_id, image_id, ..] \
-			-z image_file -f tenant_file')
+	parser = optparse.OptionParser('\nsource keystonerc* \nusage %prog --image [image_id, image_id, ..] -z image_file -f tenant_file')
 	parser.add_option('-z', dest='image_file', type='string', help='a file that contains an image list')
 	parser.add_option('-f', dest='tenant_file', type='string', help='tenant file to authenticate on keystone')
 	parser.add_option('--image', dest='image', type='string', help='specify the image id to analyze')
+	parser.add_option('-d', dest='deprecate', type='string', help='deprecate the images read from file or given as argument')
 	
+
 	(options, args) = parser.parse_args()
 	
 	tenant_file = options.tenant_file
 	image_file = options.image_file
 	image = options.image
-	
+
 	'''
 	First of all check the authentication method: give priority to keystonerc option
 	to avoid any relation with the host/guest
@@ -208,13 +232,19 @@ def cli():
 	if(image is None and image_file is None):
 		print("No images provided: continue following deprecation model")
 		autoglancing(**c)
-		
+		return 0
+	if(image_file is not None):
+		logging.info("Reading images from the file provided")
+		for image in set(load_images_from_file(image_file)):
+			aging_image(image, **c)
+		return 0
+
 	elif(image is not None):
 		for image in set(list(image.split(','))):
-			# print(image)
 			c['nclient'].print_server_list()
 			aging_image(image, **c)
-			
+		return 0
+	
 
 if __name__ == '__main__':
 	cli()

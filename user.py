@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
-
 from prettytable import PrettyTable
 from collections import defaultdict
 import re
 import os
 
-class User():
 
+class User():
 
 
 	def __init__(self, params):
@@ -16,11 +15,13 @@ class User():
 			if params[key] == "None":
 				raise Exception("[ERROR] Error Loading Parameters: check your keystonerc")
 				return -1
+	
 		self.name = params.get('OS_USERNAME', 'None')
 		self.password = params.get('OS_PASSWORD', 'None')
 		self.tenant_name = params.get('OS_TENANT_NAME', 'None')
 		self.endpoint = params.get('OS_AUTH_URL', 'None')
 		self.api_version = "v2.0"
+
 
 	def __str__(self):
 		
@@ -28,6 +29,7 @@ class User():
 		x = PrettyTable(["Name", "Password", "Tenant", "Endpoint", "API"])
 		x.add_row([self.name, ''.join(['*' for _ in self.password]),\
 			self.tenant_name, self.endpoint, self.api_version])
+
 		return str(x)
 
 
@@ -51,7 +53,6 @@ def read_env():
 	return prms
 
 
-
 def read_keystonerc(ksrc):
 	
 	prms = defaultdict()
@@ -64,10 +65,9 @@ def read_keystonerc(ksrc):
 
 
 
-
 def test():
 	
-	d = read_keystonerc("/home/fmount/Downloads/keystonerc_fpantano")
+	d = read_keystonerc("~/keystonerc")
 	print(User(d))
 	
 	d = read_env()
