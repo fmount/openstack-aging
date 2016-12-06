@@ -12,10 +12,14 @@ class Wkeystone():
 	__instance = None
 
 	def __init__(self, u):
+		
 		if Wkeystone.__instance:
 			raise Exception("Just one client per session allowed!")
+		
 		Wkeystone.__instance = self
+		
 		self.user = u
+		
 		auth = v2.Password(username=u.name, password=u.password, \
 				tenant_name=u.tenant_name, auth_url=u.endpoint)
 
@@ -26,16 +30,10 @@ class Wkeystone():
 	def __str__(self):
 		print(self.keystone)
 
+
 	def saysomething(self):
 		print "I exist"
-	
+
+
 	def print_tenant_list(self):
-		# x = PrettyTable(['Name','ID','Enabled',''])
 		print(self.keystone.tenants.list())
-
-
-
-
-# d = read_keystonerc("/home/fmount/Downloads/keystonerc_fpantano")
-# a = Wkeystone(User(d))
-# a.print_tenant_list()

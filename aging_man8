@@ -1,0 +1,58 @@
+.TH aging 1 "Dec 20, 2016" "version 0.1" "CLI USER COMMANDS
+.SH aging.py
+ Glance plugin to interactively deprecate openstack images and manage shared members
+.SH SYNOPSIS
+.B aging.py
+
+aging.py --image [image_id, image_id, ..] -z image_file -f tenant_file
+
+Options:
+  -h, --help	show this help message and exit
+  -z IMAGE_FILE	a file that contains an image list
+  -f TENANT_FILE	tenant file to authenticate on keystone
+  -i IMAGE	specify the image id to analyze
+  -d DEPRECATE	deprecate the images read from file or  given as argument
+
+.SH DESCRIPTION
+This utility will help sysadmin to process their glance images inside the openstack infrastructure according
+to an aging algorithm that allows them to keep the system up to date and more clean.
+.PP
+You will be able to centralize the glance images management providing an automated aging system if needed.  
+You can also instruct the script to be executed periodically.
+
+.SH OPTIONS
+.TP
+optional arguments:
+	
+-h, --help            show this help message and exit
+ 
+	 -z IMAGE_FILE   a file that contains an image list
+  
+	 -f TENANT_FILE  tenant file to authenticate on keystone
+  
+	 -i IMAGE        specify the image id to analyze
+  
+	 -d DEPRECATE    deprecate the images read from file or given as argument
+
+.SH FILES
++ keystonerc 
+
+.SH EXAMPLE
+.TP
+
+.B ./aging.py -f keystonerc_admin -i [IMAGE_ID_1, IMAGE_ID_2 .., IMAGE_ID_N] -v  
+
+.PP
+.SH OUTPUT
+Returns 0 if everything went fine or -1 if something failed.
+
+.SH SEE ALSO
+python(1)
+
+.SH BUGS
+Plenty, probably.
+The aging plugin is still in development. Please report them athttps://github.com/fmount/openstack-aging
+
+.SH AUTHOR
+Francesco Pantano, francesco.pantano@linux.com
+

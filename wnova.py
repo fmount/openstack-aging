@@ -35,7 +35,7 @@ class Wnova():
 	def print_server_list(self):
 		
 		'''
-		It creates a table representing the list of nodes (vms deployed) for 
+		It creates a table representing the list of nodes (vms deployed) for
 		all tenants.
 		'''
 		

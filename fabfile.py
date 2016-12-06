@@ -5,10 +5,10 @@ from fabric.operations import run, put, local
 from fabric.context_managers import lcd, cd
 
 
-env.hosts = ['10.3.40.17']
+env.hosts = ['X.Y.Z.K']
 env.user = 'root'
 env.key_filename = '~/.ssh/opstack'
-SOURCE = "/home/fmount/git/openstack-aging"
+SOURCE = "~/git/openstack-aging"
 TARGET = "/root/aging"
 
 

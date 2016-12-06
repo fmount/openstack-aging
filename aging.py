@@ -36,6 +36,7 @@ def build_openstack_clients(params):
 	# return kclient(User(params)), nclient(User(params)), gclient(User(params))
 	return dic
 
+
 def read_env(parser):
 	
 	if(os.getenv('OS_USERNAME') is None) or \
@@ -79,20 +80,28 @@ def who_use_that_image(nclient, image_id):
 
 		logging.info("%s using the %s image? %s" % (k, image_id, using))
 		
-
-		# FUCK!!
-
 		if(using):
 			marked[candidates.get(k)[1]] = image_id
 	
 	return marked
 
 
+def interactive_deprecation(nclient, gclient):
+	images = gclient.get_image_list()
+	for img in images:
+		print("Deprecate %s [y/n]")
+		c = input()
+		if(str(c) is 'y'):
+			mark_as_deprecated(img)
+
+
 def mark_as_private(gclient, image_id):
 	gclient.toggle_visibility(image_id, 'private')
 
+
 def mark_as_deprecated(image_id):
 	gclient.toggle_deprecated(image_id, True)
+
 
 def mark_as_shared(image_id, **kwargs):
 	'''
@@ -169,7 +178,8 @@ def aging_image(image, **kwargs):
 	gclient.show_member_list(image)
 
 
-# Utility
+#  Utility #
+
 def listing_images(gclient):
 	print(gclient.get_all_images())
 
@@ -206,7 +216,7 @@ def cli():
 	parser = optparse.OptionParser('\nsource keystonerc* \nusage %prog --image [image_id, image_id, ..] -z image_file -f tenant_file')
 	parser.add_option('-z', dest='image_file', type='string', help='a file that contains an image list')
 	parser.add_option('-f', dest='tenant_file', type='string', help='tenant file to authenticate on keystone')
-	parser.add_option('--image', dest='image', type='string', help='specify the image id to analyze')
+	parser.add_option('-i', dest='image', type='string', help='specify the image id to analyze')
 	parser.add_option('-d', dest='deprecate', type='string', help='deprecate the images read from file or given as argument')
 	
 
@@ -215,6 +225,7 @@ def cli():
 	tenant_file = options.tenant_file
 	image_file = options.image_file
 	image = options.image
+	deprecate = options.deprecate
 
 	'''
 	First of all check the authentication method: give priority to keystonerc option
@@ -241,10 +252,10 @@ def cli():
 
 	elif(image is not None):
 		for image in set(list(image.split(','))):
-			c['nclient'].print_server_list()
 			aging_image(image, **c)
 		return 0
 	
+	# TODO: Add deprecation feature and interactive deprecation mode
 
 if __name__ == '__main__':
 	cli()

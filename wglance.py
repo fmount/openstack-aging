@@ -124,7 +124,7 @@ class Wglance():
 		self.glance.image_members.update(image_id, tenant_id)
 
 
-	def image_list(self):
+	def print_image_list(self):
 		table = PrettyTable(['ID', 'VISIBILITY', 'DEPRECATED'])
 		for image in self.glance.images.list():
 			img = json.loads(json.dumps(image))
@@ -132,7 +132,15 @@ class Wglance():
 				'no_deprecated')])
 		print(table)
 	
-	
+
+	def get_image_list(self):
+		imgs = []
+		for image in self.glance.images.list():
+			img = json.loads(json.dumps(image))
+			imgs.append(img.get('id'))
+		return imgs
+
+
 	def show_member_list(self, image_id):
 		'''
 		Show the member list for the given image
