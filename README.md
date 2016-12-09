@@ -22,20 +22,32 @@ Options:
 
 You can import the library inside your py package and use the exposed methods in this way:
 
-TODO:::::::::::
+##API
+
 	#!/usr/bin/env python
 	
-	from towelstuff import location
-	from towelstuff import utils
+	import aging
+    
+    params = read_keystonerc('/path/to/tenant/file')
+    clients = init(params)
+    image = [id1,id2, id3]
 
-	if utils.has_towel():
-		print "Your towel is located:", location.where_is_my_towel()
-:::::::::::::::
-
+    for image in set(image):
+        aging_image(image, clients)
 
 ##FILES
 
-+ keystonerc
+The first file used by this plugin is the **keystonerc** that looks like:
+
+    export OS_USERNAME=admin 
+    export OS_TENANT_NAME=admin   
+    export OS_PASSWORD=admin
+    export OS_AUTH_URL=http://X.Y.Z.K:5000/v2.0/
+
+You can also read these values from the ENV invoking the appropriate API, but remember to source
+your keystonerc before:
+
+	params = read_env()
 
 
 ##EXAMPLE
