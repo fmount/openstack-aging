@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+#	 author: fmount <francesco.pantano@linux.com>
+
+
 from keystoneauth1.identity import v2
 from keystoneauth1 import session
 from keystoneauth1 import loading
@@ -12,7 +27,12 @@ import sys
 import re
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+# DEBUG SECTION
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+LOG = logging.getLogger(__name__)
+##
+
+# TODO: LOG.propagate = True | False (Toggle logging propagation)
 
 class Wglance():
 
@@ -57,7 +77,7 @@ class Wglance():
 		except Exception, e:
 		
 			if(re.search('^404*', str(e))):
-				logging.error("[404] IMAGE %s NOT FOUND" % image_id)
+				LOG.error("[404] IMAGE %s NOT FOUND" % image_id)
 				return False
 			
 			return False
@@ -81,7 +101,7 @@ class Wglance():
 		elif visibility is "public":
 			self.glance.images.update(image_id, visibility='public')
 		
-		logging.info("Visibility for image %s is now %s" % (image_id, visibility))
+		LOG.info("Visibility for image %s is now %s" % (image_id, visibility))
 
 
 	# Add a share for the image provided;
@@ -91,15 +111,15 @@ class Wglance():
 		>> tenant_id: an array of id who share the image
 		'''
 		try:
-			logging.info("Adding member %s for image %s " % (tenant_id, image_id))
+			LOG.info("Adding member %s for image %s " % (tenant_id, image_id))
 			self.glance.image_members.create(image_id, tenant_id)
 		
 		except Exception as e:
 			
 			if(re.search('^409*', str(e))):
-				logging.error("[409] THIS MEMBERSHIP WAS ALREADY DEFINED")
+				LOG.error("[409] THIS MEMBERSHIP WAS ALREADY DEFINED")
 			elif(re.search('^403*', str(self.error))):
-				logging.error("[403] FORBIDDEN")
+				LOG.error("[403] FORBIDDEN")
 
 
 	def delete_image(self, image_id):
@@ -112,7 +132,7 @@ class Wglance():
 		>> tenant_id: an array of id who share the image
 		'''
 		try:
-			logging.info("Remove member %s for image %s " % (tenant_id, image_id))
+			LOG.info("Remove member %s for image %s " % (tenant_id, image_id))
 			m = self.glance.image_members.delete(image_id, tenant_id)
 			if(re.search('^40{1}', m)):
 				raise Exception("Something about Permissions went wrong: ch[mod|own] something")
@@ -184,9 +204,9 @@ class Wglance():
 	def is_deprecated(self, image_id):
 		for k, v in json.loads(json.dumps(self.glance.images.get(image_id))).items():
 			if(k == "deprecated"):
-				logging.info("[DEBUG] The image %s IS deprecated " % image_id)
+				LOG.info("[DEBUG] The image %s IS deprecated " % image_id)
 				return v
-		logging.info("[DEBUG] The image %s is NOT deprecated " % image_id)
+		LOG.info("[DEBUG] The image %s is NOT deprecated " % image_id)
 		return False
 		
 
@@ -194,7 +214,7 @@ class Wglance():
 		if self.is_visible(image_id) is False:
 			self.glance.images.update(image_id, deprecated=str(bool_value))
 			return True
-		logging.WARN("Cannot Deprecate the image %s : Make it private first!!" % image_id)
+		LOG.WARN("Cannot Deprecate the image %s : Make it private first!!" % image_id)
 		return False
 	
 	

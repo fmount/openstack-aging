@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+#	 Licensed under the Apache License, Version 2.0 (the "License");
+#	 you may not use this file except in compliance with the License.
+#	 You may obtain a copy of the License at
+#
+#		 http://www.apache.org/licenses/LICENSE-2.0
+#
+#	 Unless required by applicable law or agreed to in writing, software
+#	 distributed under the License is distributed on an "AS IS" BASIS,
+#	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#	 See the License for the specific language governing permissions and
+#	 limitations under the License.
+#
+#	 author: fmount <francesco.pantano@linux.com>
+
+
 from __future__ import print_function
 from prettytable import PrettyTable
 from collections import defaultdict
@@ -19,8 +34,10 @@ import json
 
 SUPPORTED_VERSIONS = [1, 2]
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-
+# DEBUG SECTION
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+LOG = logging.getLogger(__name__)
+##
 
 def init(*args):
 	# mode = args[0]
@@ -78,7 +95,7 @@ def who_use_that_image(nclient, image_id):
 				else False)(image_id, candidates.get(k)[2])
 		
 
-		logging.info("%s using the %s image? %s" % (k, image_id, using))
+		LOG.info("%s using the %s image? %s" % (k, image_id, using))
 		
 		if(using):
 			marked[candidates.get(k)[1]] = image_id
@@ -112,12 +129,12 @@ def mark_as_shared(image_id, **kwargs):
 
 	(gclient, nclient) = (kwargs['gclient'], kwargs['nclient'])
 
-	logging.info("MAKING IMAGE %s PRIVATE" % image_id)
+	LOG.info("MAKING IMAGE %s PRIVATE" % image_id)
 	mark_as_private(gclient, image_id)
-	logging.debug(gclient.image_show(image_id))
+	LOG.debug(gclient.image_show(image_id))
 	
 	marked = who_use_that_image(nclient, image_id)
-	logging.info("\nTARGET FOR SHARE DETECTED: %s" % marked)
+	LOG.info("\nTARGET FOR SHARE DETECTED: %s" % marked)
 	share_with_tenants(gclient, image_id, marked.keys())
 
 
@@ -134,7 +151,7 @@ def share_with_tenants(gclient, image_id, tenants):
 
 def autoglancing(**kwargs):
 	for image_id in kwargs['gclient'].get_all_images():
-		logging.info("Processing image %s" % image_id)
+		LOG.info("Processing image %s" % image_id)
 		if(kwargs['gclient'].is_deprecated(image_id)):
 			mark_as_shared(image_id, **kwargs)
 
@@ -151,23 +168,23 @@ def aging_image(image, **kwargs):
 	'''
 	
 	gclient = kwargs['gclient']
-	logging.info("STARTING AGING ALGO FOR IMAGE %s " % image)
+	LOG.info("STARTING AGING ALGO FOR IMAGE %s " % image)
 
 	# Verify Image exists
 	try:
 		if(not gclient.exists(image)):
 			raise ImageDoesNotExistException
 		else:
-			logging.info("IMAGE %s EXISTS " % image)
+			LOG.info("IMAGE %s EXISTS " % image)
 
 	except ImageDoesNotExistException:
-		logging.error("IMAGE DOESN'T EXIST")
+		LOG.error("IMAGE DOESN'T EXIST")
 		yield_retry(image)
 		return -1
 
-	logging.info("DEPRECATING IMAGE %s " % image)
+	LOG.info("DEPRECATING IMAGE %s " % image)
 	gclient.toggle_deprecated(image, True)
-	logging.debug(gclient.image_show(image))
+	LOG.debug(gclient.image_show(image))
 
 	'''
 	Marking image as shared works in two steps:
@@ -190,7 +207,7 @@ def yield_retry(msg):
 		with open("hosts.retry", 'a') as f:
 			f.write(msg)
 	except Exception, e:
-		logging.error(str(e))
+		LOG.error(str(e))
 
 
 def load_images_from_file(fpath):
@@ -203,7 +220,7 @@ def load_images_from_file(fpath):
 				images.append(image.strip())
 			return images
 	except IOError, e:
-		logging.error(str(e))
+		LOG.error(str(e))
 		exit(-1)
 
 
@@ -218,7 +235,7 @@ def cli():
 	parser.add_option('-f', dest='tenant_file', type='string', help='tenant file to authenticate on keystone')
 	parser.add_option('-i', dest='image', type='string', help='specify the image id to analyze')
 	parser.add_option('-d', dest='deprecate', type='string', help='deprecate the images read from file or given as argument')
-	
+	parser.add_option('--debug', action='store_true', dest='debug', help='activate DEBUG MODE to print all critical statement during the algorithm execution')
 
 	(options, args) = parser.parse_args()
 	
@@ -226,26 +243,33 @@ def cli():
 	image_file = options.image_file
 	image = options.image
 	deprecate = options.deprecate
+	debug = options.debug
 
 	'''
 	First of all check the authentication method: give priority to keystonerc option
 	to avoid any relation with the host/guest
 	'''
 	if tenant_file == None:
-		logging.info("Try to read user info from ENV")
+		LOG.info("Try to read user info from ENV")
 		params = read_env(parser)
 	else:
-		logging.info("Loading from keystonerc")
+		LOG.info("Loading from keystonerc")
 		params = read_keystonerc(tenant_file)
 		
 	c = init(params)
 	
+	# Check debug mode to toggle logging
+	if(debug is not None):
+		LOG.propagate = True
+	else:
+		LOG.propagate = False
+
 	if(image is None and image_file is None):
 		print("No images provided: continue following deprecation model")
 		autoglancing(**c)
 		return 0
 	if(image_file is not None):
-		logging.info("Reading images from the file provided")
+		LOG.info("Reading images from the file provided")
 		for image in set(load_images_from_file(image_file)):
 			aging_image(image, **c)
 		return 0

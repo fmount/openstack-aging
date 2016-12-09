@@ -4,7 +4,7 @@
 .SH SYNOPSIS
 .B aging.py
 
-aging.py --image [image_id, image_id, ..] -z image_file -f tenant_file
+aging.py --image [image_id, image_id, ..] -z image_file -f tenant_file --debug
 
 Options:
   -h, --help	show this help message and exit
@@ -12,7 +12,8 @@ Options:
   -f TENANT_FILE	tenant file to authenticate on keystone
   -i IMAGE	specify the image id to analyze
   -d DEPRECATE	deprecate the images read from file or  given as argument
-
+  --debug=DEBUG   activate DEBUG MODE to print all critical statement during
+                  the algorithm execution
 .SH DESCRIPTION
 This utility will help sysadmin to process their glance images inside the openstack infrastructure according
 to an aging algorithm that allows them to keep the system up to date and more clean.
@@ -34,6 +35,8 @@ optional arguments:
   
 	 -d DEPRECATE    deprecate the images read from file or given as argument
 
+	 --debug=DEBUG   activate DEBUG MODE to print all critical statement during
+                     the algorithm execution
 .SH FILES
 + keystonerc 
 
