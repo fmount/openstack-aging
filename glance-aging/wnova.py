@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
+#	 Licensed under the Apache License, Version 2.0 (the "License");
+#	 you may not use this file except in compliance with the License.
+#	 You may obtain a copy of the License at
 #
-#        http://www.apache.org/licenses/LICENSE-2.0
+#		 http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+#	 Unless required by applicable law or agreed to in writing, software
+#	 distributed under the License is distributed on an "AS IS" BASIS,
+#	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#	 See the License for the specific language governing permissions and
+#	 limitations under the License.
 #
 #	 author: fmount <francesco.pantano@linux.com>
 
@@ -29,7 +29,7 @@ class Wnova():
 	__instance = None
 
 
-	def __init__(self, u):
+	def __init__(self, u, debug):
 
 		if Wnova.__instance:
 			raise Exception("Just one client per session allowed!")
@@ -41,6 +41,7 @@ class Wnova():
 		self.s = session.Session(auth=auth)
 		self.nova = client.Client('2', session=self.s)
 
+		self.debug = debug
 
 	def __str__(self):
 		print(self.nova)

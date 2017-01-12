@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
+#	 Licensed under the Apache License, Version 2.0 (the "License");
+#	 you may not use this file except in compliance with the License.
+#	 You may obtain a copy of the License at
 #
-#        http://www.apache.org/licenses/LICENSE-2.0
+#		 http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+#	 Unless required by applicable law or agreed to in writing, software
+#	 distributed under the License is distributed on an "AS IS" BASIS,
+#	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#	 See the License for the specific language governing permissions and
+#	 limitations under the License.
 #
 #	 author: fmount <francesco.pantano@linux.com>
 
@@ -28,8 +28,10 @@ import re
 
 
 # DEBUG SECTION
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 LOG = logging.getLogger(__name__)
+
 ##
 
 # TODO: LOG.propagate = True | False (Toggle logging propagation)
@@ -40,7 +42,7 @@ class Wglance():
 	__instance = None
 
 
-	def __init__(self, u, mode):
+	def __init__(self, u, mode, debug):
 	
 		if Wglance.__instance:
 			raise Exception("Just one client per session allowed!")
@@ -59,6 +61,7 @@ class Wglance():
 		self.s = session.Session(auth=auth)
 		self.glance = Client('2', session=self.s)
 
+		self.debug = debug
 
 	def __str__(self):
 		print(self.glance)
@@ -69,7 +72,9 @@ class Wglance():
 
 
 	def exists(self, image_id):
-		
+		'''
+		TODO: Check if the image type is NOT "snapshot"
+		'''
 		try:
 			self.glance.images.get(image_id)
 			return True
@@ -102,6 +107,7 @@ class Wglance():
 			self.glance.images.update(image_id, visibility='public')
 		
 		LOG.info("Visibility for image %s is now %s" % (image_id, visibility))
+		#print("Visibility for image %s is now %s" % (image_id, visibility))
 
 
 	# Add a share for the image provided;
@@ -112,8 +118,9 @@ class Wglance():
 		'''
 		try:
 			LOG.info("Adding member %s for image %s " % (tenant_id, image_id))
+			#print("Adding member %s for image %s " % (tenant_id, image_id))
 			self.glance.image_members.create(image_id, tenant_id)
-		
+			self.update_membership_status(image_id, tenant_id, "accepted")
 		except Exception as e:
 			
 			if(re.search('^409*', str(e))):
@@ -140,8 +147,8 @@ class Wglance():
 			raise Exception("No idea what could go wrong..")
 
 
-	def update_membership_status(self, image_id, tenant_id):
-		self.glance.image_members.update(image_id, tenant_id)
+	def update_membership_status(self, image_id, tenant_id, status):
+		self.glance.image_members.update(image_id, tenant_id, status)
 
 
 	def print_image_list(self):
@@ -207,6 +214,7 @@ class Wglance():
 				LOG.info("[DEBUG] The image %s IS deprecated " % image_id)
 				return v
 		LOG.info("[DEBUG] The image %s is NOT deprecated " % image_id)
+		#print("[DEBUG] The image %s is NOT deprecated " % image_id)
 		return False
 		
 
@@ -215,6 +223,7 @@ class Wglance():
 			self.glance.images.update(image_id, deprecated=str(bool_value))
 			return True
 		LOG.WARN("Cannot Deprecate the image %s : Make it private first!!" % image_id)
+		#print("Cannot Deprecate the image %s : Make it private first!!" % image_id)
 		return False
 	
 	

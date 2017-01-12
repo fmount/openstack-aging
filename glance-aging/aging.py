@@ -35,21 +35,22 @@ import json
 SUPPORTED_VERSIONS = [1, 2]
 
 # DEBUG SECTION
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 LOG = logging.getLogger(__name__)
 ##
 
 def init(*args):
 	# mode = args[0]
 	dic = args[0]
-	return build_openstack_clients(dic)
+	deb = args[1]
+	return build_openstack_clients(dic, deb)
 
 
-def build_openstack_clients(params):
+def build_openstack_clients(params, debug):
 	dic = defaultdict()
-	dic.__setitem__('kclient', kclient(User(params)))
-	dic.__setitem__('nclient', nclient(User(params)))
-	dic.__setitem__('gclient', gclient(User(params), "password"))
+	dic.__setitem__('kclient', kclient(User(params), debug))
+	dic.__setitem__('nclient', nclient(User(params), debug))
+	dic.__setitem__('gclient', gclient(User(params), "password", debug))
 	# return kclient(User(params)), nclient(User(params)), gclient(User(params))
 	return dic
 
@@ -256,18 +257,19 @@ def cli():
 		LOG.info("Loading from keystonerc")
 		params = read_keystonerc(tenant_file)
 		
-	c = init(params)
-	
 	# Check debug mode to toggle logging
 	if(debug is not None):
 		LOG.propagate = True
 	else:
 		LOG.propagate = False
 
+	c = init(params,LOG.propagate)
+	
 	if(image is None and image_file is None):
 		print("No images provided: continue following deprecation model")
 		autoglancing(**c)
 		return 0
+	
 	if(image_file is not None):
 		LOG.info("Reading images from the file provided")
 		for image in set(load_images_from_file(image_file)):
